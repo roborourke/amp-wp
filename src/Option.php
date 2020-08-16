@@ -11,6 +11,8 @@ namespace AmpProject\AmpWP;
  * An interface to share knowledge about options stored in the AMP Options Manager.
  *
  * @package AmpProject\AmpWP
+ * @since 2.0
+ * @internal
  */
 interface Option {
 
@@ -40,6 +42,15 @@ interface Option {
 	 * @var string
 	 */
 	const DISABLE_CSS_TRANSIENT_CACHING = 'amp_css_transient_monitor_disable_caching';
+
+	/**
+	 * Redirect mobile visitors to the AMP version of a page when the site is in Transitional or Reader mode.
+	 *
+	 * Default value: false
+	 *
+	 * @var string
+	 */
+	const MOBILE_REDIRECT = 'mobile_redirect';
 
 	/**
 	 * The list of post types that have support for AMP.
@@ -78,11 +89,53 @@ interface Option {
 	/**
 	 * The slug of the theme selected to be used on AMP pages in reader mode.
 	 *
-	 * Default value: classic
+	 * Default value: legacy
 	 *
 	 * @var string
 	 */
 	const READER_THEME = 'reader_theme';
+
+	/**
+	 * The key of the option storing whether the setup wizard has been completed.
+	 *
+	 * @var boolean
+	 */
+	const PLUGIN_CONFIGURED = 'plugin_configured';
+
+	/**
+	 * Suppressed plugins
+	 *
+	 * @var string
+	 */
+	const SUPPRESSED_PLUGINS = 'suppressed_plugins';
+
+	/**
+	 * Suppressed plugins, last version.
+	 *
+	 * @var string
+	 */
+	const SUPPRESSED_PLUGINS_LAST_VERSION = 'last_version';
+
+	/**
+	 * Suppressed plugins, timestamp.
+	 *
+	 * @var string
+	 */
+	const SUPPRESSED_PLUGINS_TIMESTAMP = 'timestamp';
+
+	/**
+	 * Suppressed plugins, username.
+	 *
+	 * @var string
+	 */
+	const SUPPRESSED_PLUGINS_USERNAME = 'username';
+
+	/**
+	 * Suppressed plugins, erroring URLs.
+	 *
+	 * @var string
+	 */
+	const SUPPRESSED_PLUGINS_ERRORING_URLS = 'erroring_urls';
 
 	/**
 	 * Version of the AMP plugin for which the options were last saved.

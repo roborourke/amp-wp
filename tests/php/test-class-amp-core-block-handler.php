@@ -6,7 +6,8 @@
  * @since 1.0
  */
 
-use AmpProject\AmpWP\Tests\AssertContainsCompatibility;
+use AmpProject\AmpWP\Tests\Helpers\AssertContainsCompatibility;
+use AmpProject\AmpWP\Tests\Helpers\WithoutBlockPreRendering;
 
 /**
  * Tests for AMP_Core_Block_Handler.
@@ -17,6 +18,9 @@ use AmpProject\AmpWP\Tests\AssertContainsCompatibility;
 class Test_AMP_Core_Block_Handler extends WP_UnitTestCase {
 
 	use AssertContainsCompatibility;
+	use WithoutBlockPreRendering {
+		setUp as public prevent_block_pre_render;
+	}
 
 	/**
 	 * Set up.
@@ -28,7 +32,7 @@ class Test_AMP_Core_Block_Handler extends WP_UnitTestCase {
 		if ( version_compare( get_bloginfo( 'version' ), '5.0', '<' ) ) {
 			$this->markTestSkipped( 'Missing required render_block filter.' );
 		}
-		parent::setUp();
+		$this->prevent_block_pre_render();
 	}
 
 	/**
@@ -259,7 +263,7 @@ class Test_AMP_Core_Block_Handler extends WP_UnitTestCase {
 	 */
 	public function test_process_archives_widgets() {
 		$instance_count = 2;
-		$this->factory()->post->create( [ 'post_date' => '2010-01-01 01:01:01' ] );
+		self::factory()->post->create( [ 'post_date' => '2010-01-01 01:01:01' ] );
 
 		ob_start();
 		the_widget(

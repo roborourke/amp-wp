@@ -3,8 +3,10 @@
  * Tests for the reader theme REST controller.
  *
  * @package AMP
- * @since 1.6
+ * @since 2.0
  */
+
+use AmpProject\AmpWP\Admin\ReaderThemes;
 
 /**
  * Tests for AMP_Reader_Theme_REST_Controller.
@@ -34,7 +36,7 @@ class Test_Reader_Theme_REST_Controller extends WP_UnitTestCase {
 		}
 
 		do_action( 'rest_api_init' );
-		$this->controller = new AMP_Reader_Theme_REST_Controller( new AMP_Reader_Themes() );
+		$this->controller = new AMP_Reader_Theme_REST_Controller( new ReaderThemes() );
 	}
 
 	/**
@@ -55,7 +57,25 @@ class Test_Reader_Theme_REST_Controller extends WP_UnitTestCase {
 	 * @covers AMP_Reader_Theme_REST_Controller::get_items
 	 */
 	public function test_get_items() {
-		$this->assertEquals( 10, count( $this->controller->get_items( new WP_REST_Request( 'GET', 'amp/v1' ) )->data ) );
+		$data = $this->controller->get_items( new WP_REST_Request( 'GET', 'amp/v1' ) )->data;
+
+		$actual_reader_themes   = wp_list_pluck( $data, 'slug' );
+		$expected_reader_themes = [
+			'twentytwenty',
+			'twentynineteen',
+			'twentyseventeen',
+			'twentysixteen',
+			'twentyfifteen',
+			'twentyfourteen',
+			'twentythirteen',
+			'twentytwelve',
+			'twentyeleven',
+			'legacy',
+		];
+
+		foreach ( $expected_reader_themes as $expected_reader_theme ) {
+			$this->assertContains( $expected_reader_theme, $actual_reader_themes );
+		}
 
 		$filter = static function() {
 			return [
@@ -67,10 +87,13 @@ class Test_Reader_Theme_REST_Controller extends WP_UnitTestCase {
 			];
 		};
 
-		// Test that a theme with no screenshot_url is filtered out.
-		$this->controller = new AMP_Reader_Theme_REST_Controller( new AMP_Reader_Themes() );
+		// Test that only the filtered and AMP Legacy themes are returned.
+		$this->controller = new AMP_Reader_Theme_REST_Controller( new ReaderThemes() );
 		add_filter( 'amp_reader_themes', $filter );
-		$this->assertEquals( 0, count( $this->controller->get_items( new WP_REST_Request( 'GET', 'amp/v1' ) )->data ) );
+
+		$data = $this->controller->get_items( new WP_REST_Request( 'GET', 'amp/v1' ) )->data;
+
+		$this->assertEquals( [ 'my-theme', 'legacy' ], wp_list_pluck( $data, 'slug' ) );
 		remove_filter( 'amp_reader_themes', $filter );
 	}
 }

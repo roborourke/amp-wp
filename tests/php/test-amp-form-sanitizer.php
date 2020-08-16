@@ -5,7 +5,8 @@
  * @package AMP
  */
 
-use AmpProject\AmpWP\Tests\MarkupComparison;
+use AmpProject\AmpWP\Option;
+use AmpProject\AmpWP\Tests\Helpers\MarkupComparison;
 use AmpProject\Dom\Document;
 
 // phpcs:disable WordPress.Arrays.MultipleStatementAlignment.DoubleArrowNotAligned
@@ -25,7 +26,7 @@ class AMP_Form_Sanitizer_Test extends WP_UnitTestCase {
 	 */
 	public function setUp() {
 		parent::setUp();
-		add_theme_support( 'amp' );
+		AMP_Options_Manager::update_option( Option::THEME_SUPPORT, AMP_Theme_Support::STANDARD_MODE_SLUG );
 		$this->go_to( '/current-page/' );
 	}
 
@@ -33,7 +34,7 @@ class AMP_Form_Sanitizer_Test extends WP_UnitTestCase {
 	 * Tear down.
 	 */
 	public function tearDown() {
-		remove_theme_support( 'amp' );
+		AMP_Options_Manager::update_option( Option::THEME_SUPPORT, AMP_Theme_Support::READER_MODE_SLUG );
 		parent::tearDown();
 	}
 
@@ -214,8 +215,8 @@ class AMP_Form_Sanitizer_Test extends WP_UnitTestCase {
 		$sanitizer = new AMP_Form_Sanitizer( $dom );
 		$sanitizer->sanitize();
 
-		$whitelist_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $dom );
-		$whitelist_sanitizer->sanitize();
+		$validating_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $dom );
+		$validating_sanitizer->sanitize();
 
 		// Normalize the contents of the templates.
 		foreach ( $dom->xpath->query( Document::XPATH_MUSTACHE_TEMPLATE_ELEMENTS_QUERY, $dom->body ) as $template ) {
@@ -235,11 +236,11 @@ class AMP_Form_Sanitizer_Test extends WP_UnitTestCase {
 		$source   = '<form method="post" action-xhr="//example.org/example-page/" target="_top"></form>';
 		$expected = [ 'amp-form' => true ];
 
-		$dom                 = AMP_DOM_Utils::get_dom_from_content( $source );
-		$whitelist_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $dom );
-		$whitelist_sanitizer->sanitize();
+		$dom                  = AMP_DOM_Utils::get_dom_from_content( $source );
+		$validating_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $dom );
+		$validating_sanitizer->sanitize();
 
-		$scripts = $whitelist_sanitizer->get_scripts();
+		$scripts = $validating_sanitizer->get_scripts();
 
 		$this->assertEquals( $expected, $scripts );
 	}

@@ -161,7 +161,8 @@ blockquote p:last-child {
 .amp-wp-tax-tag,
 .amp-wp-comments-link,
 .amp-wp-footer p,
-.back-to-top {
+.back-to-top,
+#amp-mobile-version-switcher {
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen-Sans", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
 }
 
@@ -185,21 +186,6 @@ blockquote p:last-child {
 	color: <?php echo sanitize_hex_color( $header_color ); ?>;
 	text-decoration: none;
 }
-
-<?php if ( $this->get( 'post_canonical_link_url' ) || is_customize_preview() ) : ?>
-	.amp-wp-header .amp-wp-canonical-link {
-		font-size: 0.8em;
-		text-decoration: underline;
-		position: absolute;
-		<?php
-		$distance = 18;
-		if ( $this->get( 'site_icon_url' ) ) {
-			$distance += 32 + 10; // Width of site icon with margin.
-		}
-		printf( '%s: %dpx;', is_rtl() ? 'left' : 'right', $distance ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		?>
-	}
-<?php endif; ?>
 
 .amp-wp-header .amp-wp-site-icon {
 	/** site icon is 32px **/

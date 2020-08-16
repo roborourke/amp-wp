@@ -1,34 +1,40 @@
-
 /**
- * WordPress dependencies
+ * Internal dependencies
  */
-import { visitAdminPage } from '@wordpress/e2e-test-utils';
+import { moveToReaderThemesScreen, selectReaderTheme, testNextButton, testPreviousButton } from '../../utils/onboarding-wizard-utils';
 
-describe( 'AMP wizard: reader themes', () => {
+describe( 'Reader themes', () => {
 	beforeEach( async () => {
-		await visitAdminPage( 'admin.php', 'page=amp-setup&amp-new-onboarding=1&amp-setup-screen=reader-themes' );
+		await moveToReaderThemesScreen( { technical: true } );
 	} );
 
-	it( 'should have themes', async () => {
-		await page.waitForSelector( '.theme-card' );
+	it( 'shows the correct active stepper item', async () => {
+		const itemCount = await page.$$eval( '.amp-stepper__item', ( els ) => els.length );
+		expect( itemCount ).toBe( 6 );
 
+		await expect( page ).toMatchElement( '.amp-stepper__item--active', { text: 'Theme Selection' } );
+	} );
+
+	it( 'main components exist with no selection', async () => {
 		const itemCount = await page.$$eval( '.theme-card', ( els ) => els.length );
-
 		expect( itemCount ).toBe( 10 );
+
+		await expect( page ).not.toMatchElement( 'input[type="radio"]:checked' );
+		testNextButton( { text: 'Next', disabled: true } );
+		testPreviousButton( { text: 'Previous' } );
 	} );
 
 	it( 'should allow different themes to be selected', async () => {
-		await page.waitForSelector( '.theme-card' );
+		await selectReaderTheme( 'legacy' );
+		await expect( page ).toMatchElement( '.selectable--selected h4', { text: 'AMP Legacy' } );
 
-		let titleText = await page.$eval( '.selectable--selected h2', ( el ) => el.innerText );
-		expect( titleText ).toBe( 'AMP Classic' );
+		await selectReaderTheme( 'twentynineteen' );
+		await expect( page ).toMatchElement( '.selectable--selected h4', { text: 'Twenty Nineteen' } );
 
-		await page.$eval( '[for="theme-card__twentytwenty"]', ( el ) => el.click() );
-		titleText = await page.$eval( '.selectable--selected h2', ( el ) => el.innerText );
-		expect( titleText ).toBe( 'Twenty Twenty' );
+		await selectReaderTheme( 'twentysixteen' );
+		await expect( page ).toMatchElement( '.selectable--selected h4', { text: 'Twenty Sixteen' } );
 
-		await page.$eval( '[for="theme-card__twentysixteen"]', ( el ) => el.click() );
-		titleText = await page.$eval( '.selectable--selected h2', ( el ) => el.innerText );
-		expect( titleText ).toBe( 'Twenty Sixteen' );
+		testNextButton( { text: 'Next' } );
 	} );
 } );
+

@@ -4,11 +4,11 @@
 ![Banner](wp-assets/banner-1544x500.png)
 Official AMP plugin, supported by the AMP team. Formerly Accelerated Mobile Pages, AMP enables great experiences across both mobile and desktop.
 
-**Contributors:** [google](https://profiles.wordpress.org/google), [xwp](https://profiles.wordpress.org/xwp), [automattic](https://profiles.wordpress.org/automattic), [westonruter](https://profiles.wordpress.org/westonruter), [albertomedina](https://profiles.wordpress.org/albertomedina), [schlessera](https://profiles.wordpress.org/schlessera), [swissspidy](https://profiles.wordpress.org/swissspidy), [pierlo](https://profiles.wordpress.org/pierlo), [ryankienstra](https://profiles.wordpress.org/ryankienstra)  
+**Contributors:** [google](https://profiles.wordpress.org/google), [xwp](https://profiles.wordpress.org/xwp), [automattic](https://profiles.wordpress.org/automattic), [westonruter](https://profiles.wordpress.org/westonruter), [albertomedina](https://profiles.wordpress.org/albertomedina), [schlessera](https://profiles.wordpress.org/schlessera), [swissspidy](https://profiles.wordpress.org/swissspidy), [pierlo](https://profiles.wordpress.org/pierlo), [johnwatkins0](https://profiles.wordpress.org/johnwatkins0), [joshuawold](https://profiles.wordpress.org/joshuawold), [ryankienstra](https://profiles.wordpress.org/ryankienstra)  
 **Tags:** [amp](https://wordpress.org/plugins/tags/amp), [mobile](https://wordpress.org/plugins/tags/mobile), [optimization](https://wordpress.org/plugins/tags/optimization), [accelerated mobile pages](https://wordpress.org/plugins/tags/accelerated-mobile-pages), [framework](https://wordpress.org/plugins/tags/framework), [components](https://wordpress.org/plugins/tags/components), [blocks](https://wordpress.org/plugins/tags/blocks), [performance](https://wordpress.org/plugins/tags/performance), [ux](https://wordpress.org/plugins/tags/ux), [seo](https://wordpress.org/plugins/tags/seo), [official](https://wordpress.org/plugins/tags/official)  
 **Requires at least:** 4.9  
-**Tested up to:** 5.4  
-**Stable tag:** 1.5.3  
+**Tested up to:** 5.5  
+**Stable tag:** 1.5.5  
 **License:** [GPLv2 or later](http://www.gnu.org/licenses/gpl-2.0.html)  
 **Requires PHP:** 5.6  
 
@@ -24,7 +24,7 @@ Features and capabilities provided by the plugin include:
 - **Core Theme Support**: enabling AMP compatibility for all core themes, from Twenty Ten all the way through Twenty Twenty.
 - **Compatibility Tool**: when automatic conversion of markup to AMP is not possible, debug AMP validation errors with detailed information including the invalid markup and the specific components responsible on site (e.g theme, plugin, embed); validation errors are shown contextually with their respective blocks in the editor.
 - **CSS Tree Shaking**: automatically remove the majority of unused CSS to bring the total under AMP's 75KB limit; when the total after tree shaking is still over this limit, prioritization is used so that the all-important theme stylesheet important is retained, leaving less important ones to be excluded (e.g. print styles).
-- **Server-side Rendering**: integrated PHP-port of the [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/master/packages/optimizer) providing automated [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/server-side-rendering/) of AMP pages, drastically improving the [Last Contentful Paint](https://web.dev/lcp/) (LCP) metric.
+- **Server-side Rendering**: integrated PHP-port of the [AMP Optimizer](https://github.com/ampproject/amp-toolbox/tree/main/packages/optimizer) providing automated [server-side rendering](https://amp.dev/documentation/guides-and-tutorials/optimize-and-measure/server-side-rendering/) of AMP pages, drastically improving the [Last Contentful Paint](https://web.dev/lcp/) (LCP) metric.
 
 Please note that the [Stories](https://amp.dev/about/stories) experience has been removed from the AMP plugin in favor of the feature being released as a standalone plugin. It will be available soon!
 
@@ -105,3 +105,4 @@ If you are a developer, we encourage you to [follow along](https://github.com/am
 ## Changelog ##
 
 For the plugin’s changelog, please see [the Releases page on GitHub](https://github.com/ampproject/amp-wp/releases).
+

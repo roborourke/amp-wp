@@ -5,7 +5,7 @@
  * @package AMP
  */
 
-use AmpProject\AmpWP\Tests\MarkupComparison;
+use AmpProject\AmpWP\Tests\Helpers\MarkupComparison;
 use AmpProject\Dom\Document;
 
 /**
@@ -43,7 +43,7 @@ class Test_AMP_Meta_Sanitizer extends WP_UnitTestCase {
 
 		$spec = current( $named_specs );
 		$this->assertArrayHasKey( 'name', $spec['attr_spec_list'] );
-		$this->assertEquals( [ 'blacklisted_value_regex' ], array_keys( $spec['attr_spec_list']['name'] ) );
+		$this->assertEquals( [ 'disallowed_value_regex' ], array_keys( $spec['attr_spec_list']['name'] ) );
 	}
 
 	/**

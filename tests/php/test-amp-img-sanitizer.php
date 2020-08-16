@@ -5,7 +5,7 @@
  * @package AMP
  */
 
-use AmpProject\AmpWP\Tests\PrivateAccess;
+use AmpProject\AmpWP\Tests\Helpers\PrivateAccess;
 
 /**
  * Class AMP_Img_Sanitizer_Test
@@ -442,12 +442,12 @@ class AMP_Img_Sanitizer_Test extends WP_UnitTestCase {
 		$sanitizer = new AMP_Img_Sanitizer( $dom );
 		$sanitizer->sanitize();
 
-		$whitelist_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $dom );
-		$whitelist_sanitizer->sanitize();
+		$validating_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $dom );
+		$validating_sanitizer->sanitize();
 
 		$scripts = array_merge(
 			$sanitizer->get_scripts(),
-			$whitelist_sanitizer->get_scripts()
+			$validating_sanitizer->get_scripts()
 		);
 		$this->assertEquals( $expected, $scripts );
 	}
@@ -463,12 +463,12 @@ class AMP_Img_Sanitizer_Test extends WP_UnitTestCase {
 		$sanitizer = new AMP_Img_Sanitizer( $dom );
 		$sanitizer->sanitize();
 
-		$whitelist_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $dom );
-		$whitelist_sanitizer->sanitize();
+		$validating_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $dom );
+		$validating_sanitizer->sanitize();
 
 		$scripts = array_merge(
 			$sanitizer->get_scripts(),
-			$whitelist_sanitizer->get_scripts()
+			$validating_sanitizer->get_scripts()
 		);
 		$this->assertEquals( $expected, $scripts );
 	}
@@ -561,9 +561,9 @@ class AMP_Img_Sanitizer_Test extends WP_UnitTestCase {
 	 * @return int|WP_Error The new attachment ID, or WP_Error.
 	 */
 	public function get_new_attachment_id() {
-		return $this->factory()->attachment->create_object(
+		return self::factory()->attachment->create_object(
 			'example-image.jpeg',
-			$this->factory()->post->create(),
+			self::factory()->post->create(),
 			[
 				'post_mime_type' => 'image/jpeg',
 				'post_type'      => 'attachment',

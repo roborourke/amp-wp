@@ -7,12 +7,14 @@
 
 // phpcs:disable WordPress.Arrays.MultipleStatementAlignment.DoubleArrowNotAligned
 
+use AmpProject\AmpWP\Option;
 use AmpProject\AmpWP\RemoteRequest\CachedResponse;
 use AmpProject\AmpWP\RemoteRequest\CachedRemoteGetRequest;
-use AmpProject\AmpWP\Tests\AssertContainsCompatibility;
-use AmpProject\AmpWP\Tests\MarkupComparison;
+use AmpProject\AmpWP\Tests\Helpers\AssertContainsCompatibility;
+use AmpProject\AmpWP\Tests\Helpers\LoadsCoreThemes;
+use AmpProject\AmpWP\Tests\Helpers\MarkupComparison;
 use AmpProject\Dom\Document;
-use AmpProject\AmpWP\Tests\PrivateAccess;
+use AmpProject\AmpWP\Tests\Helpers\PrivateAccess;
 use AmpProject\Exception\FailedToGetFromRemoteUrl;
 
 /**
@@ -23,6 +25,7 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 	use AssertContainsCompatibility;
 	use MarkupComparison;
 	use PrivateAccess;
+	use LoadsCoreThemes;
 
 	/**
 	 * Set up.
@@ -33,6 +36,8 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 		$wp_styles  = null;
 		$wp_scripts = null;
 		delete_option( AMP_Options_Manager::OPTION_NAME ); // Make sure default reader mode option does not override theme support being added.
+
+		$this->register_core_themes();
 	}
 
 	/**
@@ -40,9 +45,12 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 	 */
 	public function tearDown() {
 		parent::tearDown();
-		global $wp_styles, $wp_scripts;
-		$wp_styles  = null;
-		$wp_scripts = null;
+		global $wp_styles, $wp_scripts, $wp_customize;
+		$wp_styles    = null;
+		$wp_scripts   = null;
+		$wp_customize = null;
+
+		$this->restore_theme_directories();
 	}
 
 	/**
@@ -229,6 +237,14 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 				'<table><colgroup><col data-amp-original-style="width: 50px;background-color: red; width: 60px" class="amp-wp-c8aa9e9"></colgroup></table>',
 				[
 					':root:not(#_):not(#_):not(#_):not(#_):not(#_) .amp-wp-c8aa9e9{width:50px;width:60px;background-color:red}',
+				],
+			],
+
+			'nested_css_var_in_function'         => [
+				'<style>.opacity3 { color: rgba(0, 0, 255, var(--opacity)); }</style><p class="opacity3"></p>',
+				'<p class="opacity3"></p>',
+				[
+					'.opacity3{color:rgba(0,0,255,var(--opacity))}',
 				],
 			],
 
@@ -667,10 +683,12 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 				'
 				<html>
 					<head>
+						<noscript>
+							<style>h2.one { color: green }</style>
+						</noscript>
 					</head>
 					<body>
 						<style>
-							h2.one { color: green }
 							h2.two { color: red }
 						</style>
 						<template type="amp-mustache">
@@ -683,7 +701,8 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 				</html>
 				',
 				[
-					'h2.one{color:green}h2.two{color:red}',
+					'h2.one{color:green}',
+					'h2.two{color:red}',
 				],
 				[],
 			],
@@ -735,8 +754,8 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 		$sanitizer = new AMP_Style_Sanitizer( $dom, $args );
 		$sanitizer->sanitize();
 
-		$whitelist_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $dom, $args );
-		$whitelist_sanitizer->sanitize();
+		$validating_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $dom, $args );
+		$validating_sanitizer->sanitize();
 
 		$sanitized_html     = $dom->saveHTML( $dom->documentElement );
 		$actual_stylesheets = array_values( array_filter( $sanitizer->get_stylesheets() ) );
@@ -759,6 +778,71 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 		if ( $actual_stylesheets ) {
 			$this->assertStringContains( "\n\n/*# sourceURL=amp-custom.css */", $sanitized_html );
 		}
+	}
+
+	/**
+	 * Test that tree shaking and CSS limits are disabled when in the Customizer Preview.
+	 */
+	public function test_tree_shaking_disabled_in_customizer_preview() {
+		$active_theme = 'twentynineteen';
+		$reader_theme = 'twentytwenty';
+		if ( ! wp_get_theme( $active_theme )->exists() || ! wp_get_theme( $reader_theme )->exists() ) {
+			$this->markTestSkipped();
+		}
+		switch_theme( $active_theme );
+		AMP_Options_Manager::update_option( Option::THEME_SUPPORT, AMP_Theme_Support::READER_MODE_SLUG );
+		AMP_Options_Manager::update_option( Option::READER_THEME, $reader_theme );
+
+		require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
+		global $wp_customize;
+		$wp_customize = new WP_Customize_Manager();
+		$wp_customize->start_previewing_theme();
+		$this->assertTrue( is_customize_preview() );
+
+		$dom = Document::fromHtml(
+			sprintf(
+				'
+				<html>
+					<head>
+						<style>
+						.selective-refresh-container {
+							outline: solid 1px red;
+						}
+						</style>
+						<style>
+						.my-partial {
+							outline: solid 1px blue;
+							content: "%s";
+						}
+						</style>
+					</head>
+					<body>
+						<div class="selective-refresh-container">
+							<!-- Selective refresh may render my-partial here. -->
+						</div>
+					</body>
+				</html>
+				',
+				str_repeat( 'a', 75001 )
+			)
+		);
+
+		$args = [
+			'use_document_element' => true,
+		];
+
+		$sanitizer = new AMP_Style_Sanitizer( $dom, $args );
+		$sanitizer->sanitize();
+
+		$validating_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $dom, $args );
+		$validating_sanitizer->sanitize();
+
+		$actual_stylesheets = array_values( array_filter( $sanitizer->get_stylesheets() ) );
+
+		$this->assertCount( 2, $actual_stylesheets );
+		$this->assertStringStartsWith( '.selective-refresh-container{', $actual_stylesheets[0] );
+		$this->assertStringStartsWith( '.my-partial{', $actual_stylesheets[1] );
+		$this->assertGreaterThan( 75000, strlen( implode( '', $actual_stylesheets ) ) );
 	}
 
 	/**
@@ -1897,7 +1981,7 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 				[],
 			],
 
-			'blacklisted_and_whitelisted_keyframe_properties' => [
+			'denylisted_and_allowlisted_keyframe_properties' => [
 				'<style amp-keyframes>@keyframes anim1 { 50% { width: 50%; animation-timing-function: ease; opacity: 0.5; height:10%; offset-distance: 50%; visibility: visible; transform: rotate(0.5turn); -webkit-transform: rotate(0.5turn); color:red; } }</style>',
 				'<style amp-keyframes="">@keyframes anim1{50%{animation-timing-function:ease;opacity:.5;offset-distance:50%;visibility:visible;transform:rotate(.5 turn);-webkit-transform:rotate(.5 turn)}}</style>',
 				array_fill( 0, 3, AMP_Style_Sanitizer::CSS_SYNTAX_INVALID_PROPERTY ),
@@ -2521,7 +2605,7 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 	 */
 	public function test_unicode_stylesheet() {
 		wp();
-		add_theme_support( AMP_Theme_Support::SLUG );
+		AMP_Options_Manager::update_option( Option::THEME_SUPPORT, AMP_Theme_Support::STANDARD_MODE_SLUG );
 		AMP_Theme_Support::init();
 		AMP_Theme_Support::finish_init();
 
@@ -2536,6 +2620,7 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 			</head>
 			<body>
 				<span class="dashicons dashicons-admin-customizer"></span>
+				<?php wp_footer(); ?>
 			</body>
 		</html>
 		<?php
@@ -2632,7 +2717,7 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 		return [
 			'admin_bar_included' => [
 				function () use ( $render_template ) {
-					$this->go_to( amp_get_permalink( $this->factory()->post->create() ) );
+					$this->go_to( amp_get_permalink( self::factory()->post->create() ) );
 					show_admin_bar( true );
 					_wp_admin_bar_init();
 					switch_theme( 'twentyten' );
@@ -2703,6 +2788,20 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 			$this->markTestSkipped( 'Requires WordPress 5.0.' );
 		}
 		global $wp_theme_directories; // Note that get_theme_roots() does not work, for some reason.
+
+		// @todo Remove once https://github.com/WordPress/gutenberg/pull/23104 is in a release.
+		// Temporarily fixes an issue with PHP errors being thrown in Gutenberg v8.3.0 on PHP 7.4.
+		$theme_features = [
+			'editor-color-palette',
+			'editor-gradient-presets',
+			'editor-font-sizes',
+		];
+		foreach ( $theme_features as $theme_feature ) {
+			if ( ! current_theme_supports( $theme_feature ) ) {
+				add_theme_support( $theme_feature, [] );
+			}
+		}
+
 		$theme_exists = false;
 		foreach ( $wp_theme_directories as $theme_root ) {
 			$theme_exists = wp_get_theme( 'twentyten', $theme_root )->exists();
@@ -2714,7 +2813,7 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 			$this->markTestSkipped( 'Requires Twenty Ten to be installed.' );
 		}
 
-		add_theme_support( 'amp' );
+		AMP_Options_Manager::update_option( Option::THEME_SUPPORT, AMP_Theme_Support::STANDARD_MODE_SLUG );
 		$this->go_to( home_url() );
 		$html = $html_generator();
 
@@ -2735,8 +2834,8 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 		$sanitizer = new AMP_Style_Sanitizer( $amphtml_dom, $args );
 		$sanitizer->sanitize();
 
-		$whitelist_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $amphtml_dom, $args );
-		$whitelist_sanitizer->sanitize();
+		$validating_sanitizer = new AMP_Tag_And_Attribute_Sanitizer( $amphtml_dom, $args );
+		$validating_sanitizer->sanitize();
 
 		$assert( $original_dom, $html, $amphtml_dom, $amphtml_dom->saveHTML(), $sanitizer->get_stylesheets() );
 	}

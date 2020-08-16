@@ -11,6 +11,8 @@ namespace AmpProject\AmpWP;
  * Icons used to visually represent the state of a validation error.
  *
  * @package AmpProject\AmpWP
+ * @since 2.0
+ * @internal
  */
 final class Icon {
 
@@ -33,6 +35,11 @@ final class Icon {
 	 * Indicates there are validation errors which have not been explicitly accepted.
 	 */
 	const WARNING = 'amp-warning';
+
+	/**
+	 * Indicates being on an AMP page.
+	 */
+	const LOGO = 'amp-logo';
 
 	/**
 	 * Icon class name.
@@ -87,6 +94,15 @@ final class Icon {
 	}
 
 	/**
+	 * Logo icon
+	 *
+	 * @return Icon
+	 */
+	public static function logo() {
+		return new self( self::LOGO );
+	}
+
+	/**
 	 * Get color for current icon.
 	 *
 	 * @return string Hex color for icon.
@@ -114,10 +130,10 @@ final class Icon {
 	 * @return string Rendered HTML.
 	 */
 	public function to_html( $attributes = [] ) {
-		$icon_class = ' amp-icon ' . $this->icon;
+		$icon_class = 'amp-icon ' . $this->icon;
 
-		$attributes['class'] = isset( $attributes['class'] )
-			? $attributes['class'] . $icon_class
+		$attributes['class'] = ! empty( $attributes['class'] )
+			? $attributes['class'] . ' ' . $icon_class
 			: $icon_class;
 
 		$attributes_string = implode(
@@ -126,8 +142,8 @@ final class Icon {
 				static function ( $key, $value ) {
 					return sprintf(
 						'%s="%s"',
-						htmlspecialchars( $key ),
-						htmlspecialchars( $value )
+						esc_attr( sanitize_key( $key ) ),
+						esc_attr( $value )
 					);
 				},
 				array_keys( $attributes ),

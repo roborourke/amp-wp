@@ -7,16 +7,20 @@
 
 namespace AmpProject\AmpWP\BackgroundTask;
 
-use AmpProject\AmpWP\HasDeactivation;
 use AmpProject\AmpWP\Icon;
-use AmpProject\AmpWP\Service;
+use AmpProject\AmpWP\Infrastructure\Conditional;
+use AmpProject\AmpWP\Infrastructure\Deactivateable;
+use AmpProject\AmpWP\Infrastructure\Registerable;
+use AmpProject\AmpWP\Infrastructure\Service;
 
 /**
  * Abstract base class for using cron to execute a background task.
  *
  * @package AmpProject\AmpWP
+ * @since 2.0
+ * @internal
  */
-abstract class CronBasedBackgroundTask implements Service, HasDeactivation {
+abstract class CronBasedBackgroundTask implements Service, Registerable, Conditional, Deactivateable {
 
 	const DEFAULT_INTERVAL_HOURLY      = 'hourly';
 	const DEFAULT_INTERVAL_TWICE_DAILY = 'twicedaily';
@@ -30,6 +34,15 @@ abstract class CronBasedBackgroundTask implements Service, HasDeactivation {
 	 * @var string
 	 */
 	private $plugin_file;
+
+	/**
+	 * Check whether the conditional object is currently needed.
+	 *
+	 * @return bool Whether the conditional object is needed.
+	 */
+	public static function is_needed() {
+		return is_admin() || wp_doing_cron();
+	}
 
 	/**
 	 * Register the service with the system.
@@ -121,7 +134,10 @@ abstract class CronBasedBackgroundTask implements Service, HasDeactivation {
 
 		wp_enqueue_style( 'amp-icons' );
 
-		$actions['deactivate'] = preg_replace( '#(?=</a>)#i', ' ' . $this->get_warning_icon(), $actions['deactivate'] );
+		$warning_icon = $this->get_warning_icon();
+		if ( false === strpos( $actions['deactivate'], $warning_icon ) ) {
+			$actions['deactivate'] = preg_replace( '#(?=</a>)#i', ' ' . $warning_icon, $actions['deactivate'] );
+		}
 
 		return $actions;
 	}
@@ -145,7 +161,11 @@ abstract class CronBasedBackgroundTask implements Service, HasDeactivation {
 
 		wp_enqueue_style( 'amp-icons' );
 
-		$plugin_meta[] = $this->get_warning_icon() . ' ' . esc_html__( 'Large site detected. Deactivation will leave orphaned scheduled events behind.', 'amp' ) . ' ' . $this->get_warning_icon();
+		$warning = $this->get_warning_icon() . ' ' . esc_html__( 'Large site detected. Deactivation will leave orphaned scheduled events behind.', 'amp' ) . ' ' . $this->get_warning_icon();
+
+		if ( ! in_array( $warning, $plugin_meta, true ) ) {
+			$plugin_meta[] = $warning;
+		}
 
 		return $plugin_meta;
 	}

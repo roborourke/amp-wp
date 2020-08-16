@@ -6,9 +6,10 @@
  */
 
 use AmpProject\AmpWP\Admin\SiteHealth;
+use AmpProject\AmpWP\AmpWpPluginFactory;
 use AmpProject\AmpWP\Option;
-use AmpProject\AmpWP\Tests\AssertContainsCompatibility;
-use AmpProject\AmpWP\Tests\PrivateAccess;
+use AmpProject\AmpWP\Tests\Helpers\AssertContainsCompatibility;
+use AmpProject\AmpWP\Tests\Helpers\PrivateAccess;
 
 /**
  * Test Site_Health.
@@ -32,7 +33,18 @@ class Test_Site_Health extends WP_UnitTestCase {
 	 */
 	public function setUp() {
 		parent::setUp();
-		$this->instance = new SiteHealth();
+
+		$injector = AmpWpPluginFactory::create()
+			->get_container()
+			->get( 'injector' );
+
+		$this->instance = $injector->make( SiteHealth::class );
+
+		remove_theme_support( 'amp' );
+		foreach ( get_post_types_by_support( 'amp' ) as $post_type ) {
+			remove_post_type_support( $post_type, 'amp' );
+		}
+		delete_option( AMP_Options_Manager::OPTION_NAME );
 	}
 
 	/**
@@ -48,13 +60,14 @@ class Test_Site_Health extends WP_UnitTestCase {
 	/**
 	 * Test init.
 	 *
-	 * @covers \AmpProject\AmpWP\Admin\SiteHealth::init()
+	 * @covers \AmpProject\AmpWP\Admin\SiteHealth::register()
 	 */
-	public function test_init() {
-		$this->instance->init();
-		$this->assertEquals( 10, has_action( 'site_status_tests', [ $this->instance, 'add_tests' ] ) );
-		$this->assertEquals( 10, has_action( 'debug_information', [ $this->instance, 'add_debug_information' ] ) );
-		$this->assertEquals( 10, has_action( 'site_status_test_php_modules', [ $this->instance, 'add_extensions' ] ) );
+	public function test_register() {
+		$this->instance->register();
+		$this->assertEquals( 10, has_filter( 'site_status_tests', [ $this->instance, 'add_tests' ] ) );
+		$this->assertEquals( 10, has_filter( 'debug_information', [ $this->instance, 'add_debug_information' ] ) );
+		$this->assertEquals( 10, has_filter( 'site_status_test_result', [ $this->instance, 'modify_test_result' ] ) );
+		$this->assertEquals( 10, has_filter( 'site_status_test_php_modules', [ $this->instance, 'add_extensions' ] ) );
 		$this->assertEquals( 10, has_action( 'admin_print_styles-site-health.php', [ $this->instance, 'add_styles' ] ) );
 	}
 
@@ -233,6 +246,58 @@ class Test_Site_Health extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Get test data for test_modify_test_result.
+	 *
+	 * @return array[] Test data.
+	 */
+	public function get_test_result() {
+		return [
+			'empty_result'                    => [
+				[],
+			],
+			'good_https_status_result'        => [
+				[
+					'test'        => 'https_status',
+					'status'      => 'good',
+					'description' => '',
+				],
+			],
+			'recommended_https_status_result' => [
+				[
+					'test'        => 'https_status',
+					'status'      => 'recommended',
+					'description' => '',
+				],
+				[
+					'test'        => 'https_status',
+					'status'      => 'critical',
+					'description' => '<p>Additionally, AMP requires HTTPS for most components to work properly, including iframes and videos.</p>',
+				],
+			],
+		];
+	}
+
+	/**
+	 * Test modify_test_result.
+	 *
+	 * @dataProvider get_test_result
+	 *
+	 * @covers \AmpProject\AmpWP\Admin\SiteHealth::modify_test_result()
+	 *
+	 * @param array $test_data Data from Site Health test.
+	 * @param array $expected  Expected modified test result.
+	 */
+	public function test_modify_test_result( $test_data, $expected = null ) {
+		$test_result = $this->instance->modify_test_result( $test_data );
+
+		if ( ! $expected ) {
+			$expected = $test_data;
+		}
+
+		$this->assertEquals( $expected, $test_result );
+	}
+
+	/**
 	 * Gets the test data for test_get_supported_templates().
 	 *
 	 * @return array The test data.
@@ -243,10 +308,10 @@ class Test_Site_Health extends WP_UnitTestCase {
 				[],
 				[],
 				'standard',
-				'post',
+				'No template supported',
 			],
 			'only_singular'               => [
-				[],
+				[ 'post' ],
 				[ 'is_singular' ],
 				'transitional',
 				'post, is_singular',
@@ -296,19 +361,11 @@ class Test_Site_Health extends WP_UnitTestCase {
 	 * @param string $expected                The expected string of supported templates.
 	 */
 	public function test_get_supported_templates( $supported_content_types, $supported_templates, $theme_support, $expected ) {
+		remove_theme_support( 'amp' );
 		AMP_Options_Manager::update_option( Option::ALL_TEMPLATES_SUPPORTED, false );
 		AMP_Options_Manager::update_option( Option::SUPPORTED_TEMPLATES, $supported_templates );
 		AMP_Options_Manager::update_option( Option::THEME_SUPPORT, $theme_support );
-		AMP_Theme_Support::read_theme_support();
-
-		$basic_post_types = [ 'post', 'page' ];
-		foreach ( array_diff( $basic_post_types, $supported_content_types ) as $post_type ) {
-			remove_post_type_support( $post_type, AMP_Theme_Support::SLUG );
-		}
-
-		foreach ( $supported_content_types as $post_type ) {
-			add_post_type_support( $post_type, AMP_Theme_Support::SLUG );
-		}
+		AMP_Options_Manager::update_option( Option::SUPPORTED_POST_TYPES, $supported_content_types );
 
 		$this->assertEquals( $expected, $this->call_private_method( $this->instance, 'get_supported_templates' ) );
 	}
@@ -366,7 +423,6 @@ class Test_Site_Health extends WP_UnitTestCase {
 	public function test_get_serve_all_templates( $theme_support, $do_serve_all_templates, $expected ) {
 		AMP_Options_Manager::update_option( Option::THEME_SUPPORT, $theme_support );
 		AMP_Options_Manager::update_option( Option::ALL_TEMPLATES_SUPPORTED, $do_serve_all_templates );
-		AMP_Theme_Support::read_theme_support();
 
 		$this->assertEquals( $expected, $this->call_private_method( $this->instance, 'get_serve_all_templates' ) );
 	}

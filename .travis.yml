@@ -60,8 +60,6 @@ jobs:
   allow_failures:
     # PHP unit tests (7.3, WordPress trunk)
     - env: WP_VERSION=trunk  DEV_LIB_ONLY=phpunit                               INSTALL_PWA_PLUGIN=1
-    # PHP and JavaScript unit tests (7.3, WordPress trunk, with code coverage)
-    - env: WP_VERSION=latest DEV_LIB_ONLY=phpunit                               INSTALL_PWA_PLUGIN=1 RUN_PHPUNIT_COVERAGE=1
     # PHP unit tests (8.0, WordPress trunk)
     - env: WP_VERSION=trunk  DEV_LIB_ONLY=phpunit                               INSTALL_PWA_PLUGIN=1
       php: nightly
@@ -144,12 +142,15 @@ jobs:
       php: "nightly"
       env: WP_VERSION=trunk  DEV_LIB_ONLY=phpunit                               INSTALL_PWA_PLUGIN=1
 
-    - name: PHP and JavaScript unit tests (7.4, WordPress trunk, with code coverage)
-      if: branch = develop AND type = push
+    - name: PHP and JavaScript unit tests (7.4, WordPress latest, with code coverage)
       php: "7.4"
       env: WP_VERSION=latest DEV_LIB_ONLY=phpunit                               INSTALL_PWA_PLUGIN=1 RUN_PHPUNIT_COVERAGE=1
       before_script:
-        - echo "Running unit tests with code coverage..."
+        - phpenv config-rm xdebug.ini || echo "xdebug.ini does not exist."
+        - pecl install pcov
+        # PHPUnit has to be installed from source to allow pcov/cobbler to patch it.
+        - composer global require --dev --ignore-platform-reqs phpunit/phpunit:^7 pcov/clobber
+        - $(composer config home)/vendor/bin/pcov $(composer config home) clobber
       script:
         - npm run build:js
         - npm run build:css
@@ -170,7 +171,6 @@ jobs:
 
     - name: Libraries that are meant to be externalized (7.4)
       php: "7.4"
-
       install:
         - composer --working-dir=lib/common install
         - composer --working-dir=lib/optimizer install

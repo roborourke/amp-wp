@@ -40,9 +40,9 @@ function after_wp_install {
 	fi
 
 	if [[ ! -z $RUN_PHPUNIT_COVERAGE ]]; then
-			# Ensure the phpunit installed via Composer (and patched by pcov/cobbler) is used instead of the one installed
-			# by wp-dev-lib.
-			PATH="$(composer config home)/vendor/bin:$PATH"
+		# Ensure the phpunit installed via Composer (and patched by pcov/cobbler) is used instead of the one installed
+		# by wp-dev-lib.
+		PATH="$(composer config home)/vendor/bin:$PATH"
 	fi
 }
 

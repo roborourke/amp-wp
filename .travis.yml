@@ -148,6 +148,8 @@ jobs:
       before_script:
         - phpenv config-rm xdebug.ini || echo "xdebug.ini does not exist."
         - pecl install pcov
+        - echo "pcov.directory=$(pwd)" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+        - echo "pcov.exclude=$(pwd)/(node_modules|back-compat|bin|tests|vendor|build|docs)" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
         # PHPUnit has to be installed from source to allow pcov/cobbler to patch it.
         - composer global require --dev --ignore-platform-reqs phpunit/phpunit:^7 pcov/clobber
         - $(composer config home)/vendor/bin/pcov $(composer config home) clobber

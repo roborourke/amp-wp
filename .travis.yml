@@ -146,12 +146,7 @@ jobs:
       php: "7.4"
       env: WP_VERSION=latest DEV_LIB_ONLY=phpunit                               INSTALL_PWA_PLUGIN=1 RUN_PHPUNIT_COVERAGE=1
       before_script:
-        - phpenv config-rm xdebug.ini || echo "xdebug.ini does not exist."
-        - pecl install pcov
-        - echo "pcov.directory=." >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-        # PHPUnit has to be installed from source to allow pcov/cobbler to patch it.
-        - composer global require --dev --ignore-platform-reqs phpunit/phpunit:^7 pcov/clobber
-        - $(composer config home)/vendor/bin/pcov $(composer config home) clobber
+        - bash ./bin/setup-pcov.sh
       script:
         - npm run build:js
         - npm run build:css

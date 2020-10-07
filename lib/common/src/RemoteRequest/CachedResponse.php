@@ -25,7 +25,7 @@ final class CachedResponse implements Response
     /**
      * Response that is being cached.
      *
-     * @var RemoteGetRequestResponse
+     * @var Response
      */
     private $response;
 

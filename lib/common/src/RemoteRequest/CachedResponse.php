@@ -8,7 +8,6 @@
 
 namespace AmpProject\RemoteRequest;
 
-use AmpProject\RemoteRequest\RemoteGetRequestResponse;
 use AmpProject\Response;
 use DateTimeImmutable;
 use DateTimeInterface;

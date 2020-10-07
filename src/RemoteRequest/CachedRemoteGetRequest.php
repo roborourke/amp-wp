@@ -10,6 +10,7 @@ namespace AmpProject\AmpWP\RemoteRequest;
 use AmpProject\Exception\FailedToGetCachedResponse;
 use AmpProject\Exception\FailedToGetFromRemoteUrl;
 use AmpProject\RemoteGetRequest;
+use AmpProject\RemoteRequest\CachedResponse;
 use AmpProject\RemoteRequest\RemoteGetRequestResponse;
 use AmpProject\Response;
 use DateTimeImmutable;

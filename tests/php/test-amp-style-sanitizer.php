@@ -8,7 +8,7 @@
 // phpcs:disable WordPress.Arrays.MultipleStatementAlignment.DoubleArrowNotAligned
 
 use AmpProject\AmpWP\Option;
-use AmpProject\AmpWP\RemoteRequest\CachedResponse;
+use AmpProject\RemoteRequest\CachedResponse;
 use AmpProject\AmpWP\RemoteRequest\CachedRemoteGetRequest;
 use AmpProject\AmpWP\Tests\Helpers\AssertContainsCompatibility;
 use AmpProject\AmpWP\Tests\Helpers\LoadsCoreThemes;

@@ -5,7 +5,7 @@
  * @package AmpProject\AmpWP
  */
 
-namespace AmpProject\AmpWP\RemoteRequest;
+namespace AmpProject\RemoteRequest;
 
 use AmpProject\RemoteRequest\RemoteGetRequestResponse;
 use AmpProject\Response;

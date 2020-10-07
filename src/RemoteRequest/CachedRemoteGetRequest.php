@@ -120,7 +120,7 @@ final class CachedRemoteGetRequest implements RemoteGetRequest {
 			}
 		}
 
-		if ( ! $cached_response instanceof CachedResponse || $cached_response->is_expired() ) {
+		if ( ! $cached_response instanceof CachedResponse || $cached_response->isExpired() ) {
 			try {
 				$response = $this->remote_request->get( $url );
 				$status   = $response->getStatusCode();
@@ -138,11 +138,11 @@ final class CachedRemoteGetRequest implements RemoteGetRequest {
 			set_transient( $cache_key, serialize( $cached_response ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 		}
 
-		if ( ! $cached_response->is_valid() ) {
+		if ( ! $cached_response->isValid() ) {
 			throw new FailedToGetCachedResponse( $url );
 		}
 
-		return new RemoteGetRequestResponse( $cached_response->get_body(), $cached_response->get_headers(), $cached_response->get_status_code() );
+		return new RemoteGetRequestResponse( $cached_response->getBody(), $cached_response->getHeaders(), $cached_response->getStatusCode() );
 	}
 
 	/**

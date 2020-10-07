@@ -1942,9 +1942,9 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 		$cached_response = unserialize( $transient ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
 		$this->assertInstanceOf( CachedResponse::class, $cached_response );
 
-		$this->assertEquals( $response_body, $cached_response->get_body() );
-		$this->assertEquals( $headers, $cached_response->get_headers() );
-		$this->assertEquals( $status_code, $cached_response->get_status_code() );
+		$this->assertEquals( $response_body, $cached_response->getBody() );
+		$this->assertEquals( $headers, $cached_response->getHeaders() );
+		$this->assertEquals( $status_code, $cached_response->getStatusCode() );
 
 		$expiry = $cached_response->get_expiry();
 		$this->assertGreaterThan( ( new DateTimeImmutable( '+ 1 year' ) )->getTimestamp(), $expiry->getTimestamp() );
@@ -2078,9 +2078,9 @@ class AMP_Style_Sanitizer_Test extends WP_UnitTestCase {
 		$cached_response = unserialize( $transient ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize
 		$this->assertInstanceOf( CachedResponse::class, $cached_response );
 
-		$this->assertEquals( $expected_cached_response->get_body(), $cached_response->get_body() );
-		$this->assertEquals( $expected_cached_response->get_headers(), $cached_response->get_headers() );
-		$this->assertEquals( $expected_cached_response->get_status_code(), $cached_response->get_status_code() );
+		$this->assertEquals( $expected_cached_response->getBody(), $cached_response->getBody() );
+		$this->assertEquals( $expected_cached_response->getHeaders(), $cached_response->getHeaders() );
+		$this->assertEquals( $expected_cached_response->getStatusCode(), $cached_response->getStatusCode() );
 
 		$expiry = $cached_response->get_expiry();
 		$this->assertEquals( $cached_response->get_expiry()->getTimestamp(), $expiry->getTimestamp() );

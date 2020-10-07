@@ -133,7 +133,9 @@ final class CachedRemoteGetRequest implements RemoteGetRequest {
 				$body   = $exception->getMessage();
 			}
 
-			$cached_response = new CachedResponse( $body, $headers, $status, $expiry );
+			$cached_response = ( isset( $response ) && $response instanceof Response )
+				? new CachedResponse( $response, $expiry )
+				: CachedResponse::withNewResponse( $body, $headers, $status, $expiry );
 
 			set_transient( $cache_key, serialize( $cached_response ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 		}
